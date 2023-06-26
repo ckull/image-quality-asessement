@@ -27,10 +27,6 @@ def calculate_image_quality(reference_image, distorted_image):
     # Calculate Structural Similarity Index (SSIM)
     ssim_score_sewar = sewar.ssim(reference_image, distorted_image)
 
-    # # Calculate SSIM with a window size of 5x5
-    # ssim_score = metrics.structural_similarity(reference_image, distorted_image, win_size=3, multichannel=True, data_range=data_range)
-
-
     # Calculate PSNR
     psnr_score = metrics.peak_signal_noise_ratio(reference_image, distorted_image)
 
@@ -42,7 +38,6 @@ def calculate_image_quality(reference_image, distorted_image):
     return {
         'MSE': mse_score,
         'RMSE': rmse_score,
-        # 'SSIM': ssim_score,
         'SSIM_SEWAR': ssim_score_sewar,
         'PSNR': psnr_score,
         'BRISQUE': {
@@ -51,15 +46,39 @@ def calculate_image_quality(reference_image, distorted_image):
         }
     }
 
-# Define the Gradio interface
-iface = gr.Interface(
+
+def calculateNoReference(reference_image):
+        # Calculate BRISQUE score
+    brisque_score_reference = brisque_calculator.score(reference_image)
+
+    return {
+        'BRISQUE': brisque_score_reference
+    }
+
+
+layout1 = gr.Interface(
+    fn=calculateNoReference,
+    inputs=[ 
+        gr.inputs.Image(label="Reference Image"),
+        ],
+    outputs='json',
+    title= "No Reference"
+)
+
+# Create the layout for the second tab
+layout2 = gr.Interface(
     fn=calculate_image_quality,
     inputs=[
         gr.inputs.Image(label="Reference Image"),
         gr.inputs.Image(label="Distorted Image")
     ],
-    outputs="json"
+    outputs='json',
+    title="With Reference"
 )
 
+# Set up the tabs
+layout = gr.TabbedInterface([layout1, layout2], ['no-reference', 'with-reference'])
+
+
 # Launch the interface
-iface.launch()
+layout.launch()
